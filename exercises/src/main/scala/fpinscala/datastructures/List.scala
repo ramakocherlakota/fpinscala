@@ -59,7 +59,70 @@ object List { // `List` companion object. Contains functions for creating and wo
 
   def length[A](l: List[A]): Int = sys.error("todo")
 
-  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = sys.error("todo")
+  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = {
+
+    @annotation.tailrec
+    def _foldLeft(ll: List[A], acc: B) : B = ll match {
+      case Nil => acc
+      case Cons(x, xs) => _foldLeft(xs, f(acc, x))
+    }
+
+    _foldLeft(l, z)
+  }
+
+  def head[A] (l : List[A]) : A = l match {
+    case Nil => throw new Exception("oops, no head")
+    case Cons(x, xs) => x
+  }
+
+  def reverse[A](l : List[A]) : List[A] = l match {
+    case Nil => Nil
+    case Cons(x, xs) => append(reverse(xs), List(x))
+  }
+
+  def reverse2[A](l : List[A]) : List[A] = {
+    foldRight(l, Nil:List[A])((x :A , y : List[A]) => append(y, List(x)))
+  }
+
+  def sumLeft(l : List[Int]) : Int =
+    foldLeft(l, 0)(_ + _)
+
+  def lengthLeft[A](l : List[A]) : Int =
+    foldLeft(l, 0)((x,y) => x + 1)
+
+  def foldRightViaLeft[A, B](as: List[A], z: B)(f: (A, B) => B): B = {
+    foldLeft(reverse(as), z)((x, y) => f(y, x))
+  }
 
   def map[A,B](l: List[A])(f: A => B): List[B] = sys.error("todo")
+
+  def zipWith[A, B, C](as : List[A], bs : List[B])(f : (A, B) => C) : List[C] = {
+
+    def _zipWith(xs : List[A], ys : List[B], zs : List[C]) : List[C] = (xs, ys) match {
+      case (_, Nil) => reverse(zs)
+      case (Nil, _) => reverse(zs)
+      case (Cons(x, xt), Cons(y, yt)) => _zipWith(xt, yt, Cons(f(x, y), zs))
+    }
+
+    _zipWith(as, bs, Nil : List[C])
+  }
+
+  def addPairwise(as : List[Int], bs : List[Int]) : List[Int] = {
+
+    def _addPairwise(xs : List[Int], ys : List[Int], zs : List[Int]) : List[Int] = (xs, ys) match {
+      case (_, Nil) => reverse(zs)
+      case (Nil, _) => reverse(zs)
+      case (Cons(x, xt), Cons(y, yt)) => _addPairwise(xt, yt, Cons(x + y, zs))
+    }
+
+    _addPairwise(as, bs, Nil : List[Int])
+  }
+
+  def hasSubsequence[A](sup: List[A], sub: List[A]) : Boolean = {
+
+    def isPrefix(all: List[A], prefix: List[A]) : Boolean = all match {
+      val check = zipWith(all, prefix)(_ == _)
+
+    }
+  }
 }
