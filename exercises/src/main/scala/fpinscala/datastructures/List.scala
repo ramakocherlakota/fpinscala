@@ -86,16 +86,6 @@ object List { // `List` companion object. Contains functions for creating and wo
   def length[A](l: List[A]): Int = 
     foldRight(l, 0)((x,y) => 1+y)
 
-  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = {
-
-    def _foldLeft(ll : List[A], acc : B) : B = ll match {
-      case Nil => acc
-      case Cons(x, xs) => _foldLeft(xs, f(acc, x))
-    }
-
-    _foldLeft(l, z)
-  }
-
   def reverse[A](l : List[A]) = {
     foldLeft(l, Nil:List[A])((x, y) => Cons(y, x))
   }
@@ -189,6 +179,47 @@ object List { // `List` companion object. Contains functions for creating and wo
         case Cons(h, t) => isSubList(sub, t)
       }
     }
+  }
+
+  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = {
+
+    @annotation.tailrec
+    def _foldLeft(ll: List[A], acc: B) : B = ll match {
+      case Nil => acc
+      case Cons(x, xs) => _foldLeft(xs, f(acc, x))
+    }
+
+    _foldLeft(l, z)
+  }
+
+  def head[A] (l : List[A]) : A = l match {
+    case Nil => throw new Exception("oops, no head")
+    case Cons(x, xs) => x
+  }
+
+  def reverse2[A](l : List[A]) : List[A] = {
+    foldRight(l, Nil:List[A])((x :A , y : List[A]) => append(y, List(x)))
+  }
+
+  def sumLeft(l : List[Int]) : Int =
+    foldLeft(l, 0)(_ + _)
+
+  def lengthLeft[A](l : List[A]) : Int =
+    foldLeft(l, 0)((x,y) => x + 1)
+
+  def foldRightViaLeft[A, B](as: List[A], z: B)(f: (A, B) => B): B = {
+    foldLeft(reverse(as), z)((x, y) => f(y, x))
+  }
+
+  def addPairwise(as : List[Int], bs : List[Int]) : List[Int] = {
+
+    def _addPairwise(xs : List[Int], ys : List[Int], zs : List[Int]) : List[Int] = (xs, ys) match {
+      case (_, Nil) => reverse(zs)
+      case (Nil, _) => reverse(zs)
+      case (Cons(x, xt), Cons(y, yt)) => _addPairwise(xt, yt, Cons(x + y, zs))
+    }
+
+    _addPairwise(as, bs, Nil : List[Int])
   }
 
 }
