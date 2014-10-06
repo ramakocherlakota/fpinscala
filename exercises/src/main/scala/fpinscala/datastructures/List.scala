@@ -121,6 +121,12 @@ object List { // `List` companion object. Contains functions for creating and wo
     foldRight(l, Nil: List[B])((x, y) => Cons(f(x), y))
   }
 
+  def map1[A,B](l: List[A])(f: A => B): List[B] = l match {
+      case Nil => Nil
+      case Cons(h, t) => Cons(f(h), map1(t)(f))
+    }
+  }
+
   def filter[A](l: List[A])(f: A => Boolean): List[A] = {
     foldRight(l, Nil: List[A]) ((x, xs) => if (f(x)) Cons(x, xs) else xs)
   }

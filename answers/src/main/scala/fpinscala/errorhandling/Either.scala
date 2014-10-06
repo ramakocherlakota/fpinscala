@@ -15,6 +15,7 @@ sealed trait Either[+E,+A] {
      case Left(e) => Left(e)
      case Right(a) => f(a)
    }
+
  def orElse[EE >: E, AA >: A](b: => Either[EE, AA]): Either[EE, AA] =
    this match {
      case Left(_) => b
