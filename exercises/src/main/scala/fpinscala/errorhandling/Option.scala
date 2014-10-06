@@ -81,7 +81,6 @@ object Option {
     case h :: t => map2(f(h), traverse(t) (f)) (_ :: _)
   }
 
-
   def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =     a flatMap (aa => b map (bb => f(aa, bb)))
 
   def test1() : Unit = {

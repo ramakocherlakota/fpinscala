@@ -44,8 +44,16 @@ object Either {
     catch { case e: Exception => Left(e) }
 
   def traverse[E, A, B](alist: List[A])(f: A => Either[E, B]): Either[E, List[B]] = alist match {
-    a 
+    case Nil => Right(Nil)
+    case h :: t => f(h) map2 (traverse(t)(f)) (_ :: _)
+  }
+
+  def traverse_1[A, B](alist: List[A])(f: A => Option[B]): Option[List[B]] = alist match {
+    alist foldRight (Right(Nil)) (h => map2
 
   }
+
+
+
 
 }
