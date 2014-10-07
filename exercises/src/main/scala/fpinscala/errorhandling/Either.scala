@@ -21,7 +21,7 @@ sealed trait Either[+E,+A] {
 
  def map2[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] = this match {
    case Left(e) => Left(e)
-   case Right(a) => b map ((aa, bb) => f(aa, bb))
+   case Right(a) => b map (bb => f(a, bb))
  }
 
 }
@@ -44,16 +44,27 @@ object Either {
     catch { case e: Exception => Left(e) }
 
   def traverse[E, A, B](alist: List[A])(f: A => Either[E, B]): Either[E, List[B]] = alist match {
+   case Nil => Right(Nil)
+   case h :: t => f(h).map2(traverse(t)(f))(_ :: _)
+  }
+
+  def sequence[E, A](as: List[Either[E, A]]): Either[E, List[A]] = as match {
     case Nil => Right(Nil)
-    case h :: t => f(h) map2 (traverse(t)(f)) (_ :: _)
+    case h :: t => h.map2(sequence(t))(_ :: _)
   }
 
-  def traverse_1[A, B](alist: List[A])(f: A => Option[B]): Option[List[B]] = alist match {
-    alist foldRight (Right(Nil)) (h => map2
-
+  def sequenceViaTraverse[E, A](as: List[Either[E, A]]): Either[E, List[A]] = {
+    traverse[E, Either[E, A], A](as)((x : Either[E, A]) => x)
   }
 
-
-
+  def test1() : Unit = {
+    val e1 = Right("Rama")
+    val e2 = Right("Rao")
+    val e3 = Right("Kocherlakota")
+    val eList = List(e1, e2, e3)
+    println(sequence(eList))
+    val eList2 = List(e1, e2, Left("oops"), e3)
+    println(sequenceViaTraverse(eList2))
+  }
 
 }

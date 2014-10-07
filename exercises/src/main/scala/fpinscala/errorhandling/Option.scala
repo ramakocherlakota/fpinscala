@@ -14,7 +14,7 @@ sealed trait Option[+A] {
     case None => default
   }
 
-  def flatMap[B](f: A => Option[B]): Option[B] = 
+  def flatMap[B](f: A => Option[B]): Option[B] =
     map(f).getOrElse(None)
 
   def orElse[B>:A](ob: => Option[B]): Option[B] = this match {
@@ -25,7 +25,7 @@ sealed trait Option[+A] {
 
   def filter(f: A => Boolean): Option[A] = this match {
     case Some(a) => {
-      if (f(a)) 
+      if (f(a))
         this
       else
         None
@@ -81,7 +81,12 @@ object Option {
     case h :: t => map2(f(h), traverse(t) (f)) (_ :: _)
   }
 
-  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =     a flatMap (aa => b map (bb => f(aa, bb)))
+  def traverse_1[A, B](alist: List[A])(f: A => Option[B]): Option[List[B]] = {
+    alist.foldRight[Option[List[B]]](Some(Nil)) ((x,y) => map2(f(x), y) (_::_))
+  }
+  
+  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =
+    a flatMap (aa => b map (bb => f(aa, bb)))
 
   def test1() : Unit = {
     val option1 = Some("Rama")
@@ -97,7 +102,7 @@ object Option {
     try {
       Some(a)
     }
-    catch { 
+    catch {
       case e:Exception=>None
     }
   }
