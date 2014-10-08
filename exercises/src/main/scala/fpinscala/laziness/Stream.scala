@@ -12,8 +12,21 @@ trait Stream[+A] {
   def exists(p: A => Boolean): Boolean = 
     foldRight(false)((a, b) => p(a) || b) // Here `b` is the unevaluated recursive step that folds the tail of the stream. If `p(a)` returns `true`, `b` will never be evaluated and the computation terminates early.
 
-  def toList() : List[A] = 
-    foldRight[List[A]](Nil:List[A])((h, t) => h :: t)
+  def toList: List[A] = {
+    @annotation.tailrec
+    def go(s: Stream[A], acc: List[A]): List[A] = s match {
+      case Cons(h,t) => go(t(), h() :: acc)
+      case _ => acc
+    }
+    go(this, List()).reverse
+  }
+
+//    foldRight[List[A]](Nil:List[A])((h, t) => h :: t)
+// or
+//    this match {
+//      case Empty => Nil
+//      case Cons(h, t) => h() :: t().toList()
+//    }
 
   @annotation.tailrec
   final def find(f: A => Boolean): Option[A] = this match {
@@ -25,25 +38,39 @@ trait Stream[+A] {
     if (n <= 0)
       Empty
     else this match {
-      Empty => Empty
-      Cons(h, t) => Cons(h, t.take(n-1))
+      case Empty => Empty
+      case Cons(h, t) => cons(h(), t().take(n-1))
     }
   }
 
-  def drop(n: Int): Stream[A] = this match {
+  def drop(n: Int): Stream[A] = {
     if (n <= 0)
       this
     else this match {
-      Empty => Empty
-      Cons(h, t) =>  t.drop(n-1))
+      case Empty => Empty
+      case Cons(h, t) =>  t().drop(n-1)
     }
   }
 
-  def takeWhile(p: A => Boolean): Stream[A] = sys.error("todo")
+  def takeWhile(p: A => Boolean): Stream[A] = this match {
+    case Empty => Empty
+    case Cons(h, t) => if (p(h())) cons(h(), t().takeWhile(p)) else t().takeWhile(p)
+  }
 
-  def forAll(p: A => Boolean): Boolean = sys.error("todo")
+  def takeWhileViaFoldRight(p: A=>Boolean) : Stream[A] = 
+    foldRight(this)(
 
-  def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
+  def forAll(p: A => Boolean): Boolean = {
+    ! exists(x => !p(x))
+  }
+
+  def startsWith[B](s: Stream[B]): Boolean = s match {
+    case Empty => true
+    case Cons(h, t) => this match {
+      case Empty => false
+      case Cons(hh, tt) => if (hh() != h()) false else tt().startsWith(t())
+    }
+  }
 }
 case object Empty extends Stream[Nothing]
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
@@ -62,7 +89,11 @@ object Stream {
     else cons(as.head, apply(as.tail: _*))
 
   val ones: Stream[Int] = Stream.cons(1, ones)
-  def from(n: Int): Stream[Int] = sys.error("todo")
+  def from(n: Int): Stream[Int] = Stream.cons(n, from(n+1))
 
   def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = sys.error("todo")
+
+  def test() : Unit = {
+//    println(primes().take(20).toList)
+  }
 }

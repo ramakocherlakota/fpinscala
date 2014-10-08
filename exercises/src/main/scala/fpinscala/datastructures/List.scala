@@ -8,7 +8,7 @@ object List { // `List` companion object. Contains functions for creating and wo
   def sum(ints: List[Int]): Int = ints match { // A function that uses pattern matching to add up a list of integers
     case Nil => 0 // The sum of the empty list is 0.
     case Cons(x,xs) => x + sum(xs) // The sum of a list starting with `x` is `x` plus the sum of the rest of the list.
-  } 
+  }
   
   def product(ds: List[Double]): Double = ds match {
     case Nil => 1.0
@@ -22,10 +22,10 @@ object List { // `List` companion object. Contains functions for creating and wo
 
   val x = List(1,2,3,4,5) match {
     case Cons(x, Cons(2, Cons(4, _))) => x
-    case Nil => 42 
+    case Nil => 42
     case Cons(x, Cons(y, Cons(3, Cons(4, _)))) => x + y
     case Cons(h, t) => h + sum(t)
-    case _ => 101 
+    case _ => 101
   }
 
   def appendNotFold[A](a1: List[A], a2: List[A]): List[A] =
@@ -40,10 +40,10 @@ object List { // `List` companion object. Contains functions for creating and wo
       case Cons(x, xs) => f(x, foldRight(xs, z)(f))
     }
   
-  def sum2(ns: List[Int]) = 
+  def sum2(ns: List[Int]) =
     foldRight(ns, 0)((x,y) => x + y)
   
-  def product2(ns: List[Double]) = 
+  def product2(ns: List[Double]) =
     foldRight(ns, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
 
@@ -60,7 +60,7 @@ object List { // `List` companion object. Contains functions for creating and wo
   def drop[A](l: List[A], n: Int): List[A] = l match {
     case Nil => Nil
     case Cons(x, xs) => {
-      if (n <= 1) 
+      if (n <= 1)
         xs
       else
         drop(xs, n-1)
@@ -70,7 +70,7 @@ object List { // `List` companion object. Contains functions for creating and wo
   def dropWhile[A](l: List[A], f: A => Boolean): List[A] = l match {
     case Nil => Nil
     case Cons(x, xs) => {
-      if (f(x)) 
+      if (f(x))
         dropWhile(xs, f)
       else
         l
@@ -78,12 +78,12 @@ object List { // `List` companion object. Contains functions for creating and wo
   }
 
   def init[A](l: List[A]): List[A] = l match {
-    case Nil => Nil 
+    case Nil => Nil
     case Cons(x, Nil) => Nil
     case Cons(x, xs) => Cons(x, init(xs))
   }
 
-  def length[A](l: List[A]): Int = 
+  def length[A](l: List[A]): Int =
     foldRight(l, 0)((x,y) => 1+y)
 
   def reverse[A](l : List[A]) = {
@@ -107,10 +107,10 @@ object List { // `List` companion object. Contains functions for creating and wo
   def mapAdd1(as : List[Int]) = {
     foldRight(as, Nil: List[Int]) ((x, y) => Cons(x+1, y))
 
-//    as match {
-//      case Nil => Nil
-//      case Cons(x, xs) => Cons(x + 1, mapAdd1(xs))
-//    }
+    //    as match {
+    //      case Nil => Nil
+    //      case Cons(x, xs) => Cons(x + 1, mapAdd1(xs))
+    //    }
   }
 
   def mapToString(as : List[Double]) = {
@@ -122,9 +122,8 @@ object List { // `List` companion object. Contains functions for creating and wo
   }
 
   def map1[A,B](l: List[A])(f: A => B): List[B] = l match {
-      case Nil => Nil
-      case Cons(h, t) => Cons(f(h), map1(t)(f))
-    }
+    case Nil => Nil
+    case Cons(h, t) => Cons(f(h), map1(t)(f))
   }
 
   def filter[A](l: List[A])(f: A => Boolean): List[A] = {
@@ -154,20 +153,20 @@ object List { // `List` companion object. Contains functions for creating and wo
   @annotation.tailrec
   def isSubList[A](sub:List[A], sup: List[A]) : Boolean = {
 
-      def initMatchCount[B](bs : List[B], b : B) : Int = {
+    def initMatchCount[B](bs : List[B], b : B) : Int = {
 
-        @annotation.tailrec
-        def _initMatchCount(ys : List[B], count : Int) : Int = ys match {
-          case Nil => count
-          case Cons(y, yt) => {
-            if (y == b) {
-              _initMatchCount(yt, count+1)
-            }
-            else {
-              count
-            }
+      @annotation.tailrec
+      def _initMatchCount(ys : List[B], count : Int) : Int = ys match {
+        case Nil => count
+        case Cons(y, yt) => {
+          if (y == b) {
+            _initMatchCount(yt, count+1)
+          }
+          else {
+            count
           }
         }
+      }
       _initMatchCount(bs, 0)
     }
 
