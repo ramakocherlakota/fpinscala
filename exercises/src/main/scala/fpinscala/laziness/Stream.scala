@@ -20,6 +20,10 @@ trait Stream[+A] {
     foldRight[Stream[B]](b) ((h, t) => cons(h, t))
   }
 
+  def flatMap[B] (f: A=>Stream[B]) : Stream[B] = {
+    foldRight(empty[B]) ((x, xs) => f(x).append(xs))
+  }
+
   def exists(p: A => Boolean): Boolean = 
     foldRight(false)((a, b) => p(a) || b) // Here `b` is the unevaluated recursive step that folds the tail of the stream. If `p(a)` returns `true`, `b` will never be evaluated and the computation terminates early.
 
@@ -117,6 +121,12 @@ object Stream {
     else cons(as.head, apply(as.tail: _*))
 
   val ones: Stream[Int] = Stream.cons(1, ones)
+  def constant[A](a: A): Stream[A] = Stream.cons(a, constant(a))
+
+  def fibs(a0 : Int, a1: Int):Stream[Int] = {
+    cons(a0, fibs(a1, a0 + a1))
+  }
+
   def from(n: Int): Stream[Int] = Stream.cons(n, from(n+1))
 
   def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = sys.error("todo")
