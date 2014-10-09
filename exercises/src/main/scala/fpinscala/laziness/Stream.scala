@@ -54,11 +54,17 @@ trait Stream[+A] {
 
   def takeWhile(p: A => Boolean): Stream[A] = this match {
     case Empty => Empty
-    case Cons(h, t) => if (p(h())) cons(h(), t().takeWhile(p)) else t().takeWhile(p)
+    case Cons(h, t) => {
+      if (p(h())) {
+        Cons(h, () => t().takeWhile(p))
+      } else {
+        empty
+      }
+    }
   }
 
   def takeWhileViaFoldRight(p: A=>Boolean) : Stream[A] = 
-    foldRight(this)(
+    foldRight(empty[A])((a, b) => if (p(a)) cons(a, b) else empty)
 
   def forAll(p: A => Boolean): Boolean = {
     ! exists(x => !p(x))
@@ -71,6 +77,17 @@ trait Stream[+A] {
       case Cons(hh, tt) => if (hh() != h()) false else tt().startsWith(t())
     }
   }
+
+  def headOption(): Option[A] = this match {
+    case Cons(h, t) => Some(h())
+    case _ => None
+  }
+
+  def headOptionViaFoldRight(): Option[A] = {
+    def simple(a: A, b: => Option[A]):Option[A] = Some(a)
+    foldRight(None:Option[A])(simple)
+  }
+
 }
 case object Empty extends Stream[Nothing]
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
