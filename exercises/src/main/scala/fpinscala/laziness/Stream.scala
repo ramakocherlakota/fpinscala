@@ -9,6 +9,13 @@ trait Stream[+A] {
       case _ => z
     }
 
+  def map[B](f: A => B) : Stream[B] = 
+    foldRight(empty[B])((a, b) => cons(f(a), b))
+
+  def filter(p: A => Boolean): Stream[A] = {
+    foldRight[Stream[A]](empty[A]) ((h : A, t)  => if (p(h)) cons(h, t) else t)
+  }
+
   def exists(p: A => Boolean): Boolean = 
     foldRight(false)((a, b) => p(a) || b) // Here `b` is the unevaluated recursive step that folds the tail of the stream. If `p(a)` returns `true`, `b` will never be evaluated and the computation terminates early.
 
@@ -110,7 +117,13 @@ object Stream {
 
   def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = sys.error("todo")
 
+  def isPrime(n: Int) : Boolean =
+    ! from(2).takeWhile(x => x * x <= n).exists(n % _ == 0)
+
+  def primes: Stream[Int] = 
+    from(2).filter(isPrime)
+
   def test() : Unit = {
-//    println(primes().take(20).toList)
+    println(from(4).take(10).filter((i:Int) => i % 2 == 0).toList)
   }
 }
