@@ -129,7 +129,15 @@ object Stream {
 
   def from(n: Int): Stream[Int] = Stream.cons(n, from(n+1))
 
-  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = sys.error("todo")
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
+
+    def _unfold(s: S) : Stream[(A, S)] = f(s) match {
+      case Some((a, s2)) => cons((a, s2), _unfold(s2))
+      case _ => empty[(A, S)]
+    }
+
+    _unfold(z).map(_._1)
+  }
 
   def isPrime(n: Int) : Boolean =
     ! from(2).takeWhile(x => x * x <= n).exists(n % _ == 0)
