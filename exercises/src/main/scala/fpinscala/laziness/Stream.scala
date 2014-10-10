@@ -145,6 +145,18 @@ object Stream {
     _unfold(z).map(_._1)
   }
 
+  def fibsViaUnfold(a0 : Int, a1: Int) : Stream[Int] = {
+    unfold[Int, (Int, Int)](a0, a1)(s => Some(s._1, (s._2, s._1 + s._2)))
+  }
+
+  def fromViaUnfold(n : Int) : Stream[Int] = {
+    unfold[Int, Int](n)(k => Some(k, k+1))
+  }
+
+  def constantViaUnfold(n : Int) : Stream[Int] = {
+    unfold[Int, Int](n)(k => Some(n, k))
+  }
+
   def isPrime(n: Int) : Boolean =
     ! from(2).takeWhile(x => x * x <= n).exists(n % _ == 0)
 
