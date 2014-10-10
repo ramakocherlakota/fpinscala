@@ -12,6 +12,41 @@ trait Stream[+A] {
   def map[B](f: A => B) : Stream[B] = 
     foldRight(empty[B])((a, b) => cons(f(a), b))
 
+  def mapViaUnfold[B](f: A => B) : Stream[B] = {
+    def _mapViaUnfold(l : Stream[A]) : Option[(B, Stream[A])] = l match {
+      case Cons(h, t) => Some((f(h()), t()))
+      case _ => None
+    }
+
+    unfold[B, Stream[A]](this)(_mapViaUnfold)
+  }
+
+  def takeWhileViaUnfold(p:A=>Boolean) : Stream[A] = {
+    def _takeWhileViaUnfold(l: Stream[A]) : Option[(A, Stream[A])] = l match {
+      case Cons(h, t) => if (p(h())) 
+        Some((h(), t()))
+      else
+        None
+      case _ => None
+    }
+
+    unfold[A, Stream[A]](this)(_takeWhileViaUnfold)
+  }
+
+  def takeViaUnfold(n: Int) : Stream[A] = {
+    def _takeViaUnfold(pair : (Int, Stream[A])) : Option[(A, (Int, Stream[A]))] = pair match {
+      case (k, l) =>
+        if (k <= 0)
+          None
+        else l match {
+          case Cons(h, t) => Some((h(), (k-1, t())))
+          case _ => None
+      }
+    }
+
+    unfold[A, (Int, Stream[A])](n, this)(_takeViaUnfold)
+  }
+
   def filter(p: A => Boolean): Stream[A] = {
     foldRight[Stream[A]](empty[A]) ((h : A, t)  => if (p(h)) cons(h, t) else t)
   }
@@ -134,6 +169,7 @@ object Stream {
       case Some((h,s)) => cons(h, unfold(s)(f))
       case None => empty
     }
+
 
   def my_unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
 
