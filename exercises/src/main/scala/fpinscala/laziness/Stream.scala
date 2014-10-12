@@ -33,13 +33,28 @@ trait Stream[+A] {
     unfold[A, Stream[A]](this)(_takeWhileViaUnfold)
   }
 
-  def zipWithViaUnfold[B, C](ys : Stream[B])(f:(A, B) => C) : Stream[C] =  {
+  def zipAll[B](bs: Stream[B]) : Stream[(Option[A], Option[B])] = {
 
-    def _zipWithViaUnfold(ys : Stream[B]) : Option[(C, Stream[A], Stream[B])] = ys match {
-      case Cons(h, t) => Some(
+    def f(a : A, b  : B) : (Option[A], Option[B]) = (Some(a), Some(b))
+
+    zipWithViaUnfold[B, (Option[A], Option[B])](bs)(f)
+  }
+
+  def zipWithViaUnfold[B, C](bs : Stream[B])(f:(A, B) => C) : Stream[C] =  {
+
+    // S == Stream[A[, Stream[B]
+    def _zipWithViaUnfold(pair : (Stream[A], Stream[B]) ) : Option[(C, (Stream[A], Stream[B]))] = pair match {
+      case (xs, ys) => xs match {
+        case Cons(xh, xt) => ys match {
+          case Cons(yh, yt) => Some((f(xh(), yh()), (xt(), yt())))
+          case _ => None
+        }
+        case _ => None
+      }
+      case _ => None
     }
 
-    unfold[C, (Stream[A], Stream[B])](this)(_zipWithViaUnfold)
+    unfold[C, (Stream[A], Stream[B])]((this, bs))(_zipWithViaUnfold)
   }
 
   def takeViaUnfold(n: Int) : Stream[A] = {
@@ -55,8 +70,6 @@ trait Stream[+A] {
 
     unfold[A, (Int, Stream[A])](n, this)(_takeViaUnfold)
   }
-
-
 
   def filter(p: A => Boolean): Stream[A] = {
     foldRight[Stream[A]](empty[A]) ((h : A, t)  => if (p(h)) cons(h, t) else t)
