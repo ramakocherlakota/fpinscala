@@ -9,6 +9,16 @@ trait Stream[+A] {
       case _ => z
     }
 
+  def scanRight[B](z: => B)(f: (A, => B) => B): Stream[B] = {
+
+    def _scanRight(as: Stream[A], acc : Stream[B]) : Stream[B] = as match {
+      case Cons(h, t) => _scanRight(t(), foldRight(z)(f), acc)
+      case _ => acc
+    }
+
+    _scanRight(this, empty[B])
+  }
+
   def map[B](f: A => B) : Stream[B] = 
     foldRight(empty[B])((a, b) => cons(f(a), b))
 
