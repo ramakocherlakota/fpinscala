@@ -33,17 +33,60 @@ trait Stream[+A] {
     unfold[A, Stream[A]](this)(_takeWhileViaUnfold)
   }
 
+  def zipWithAll[B, C](bs: Stream[B])(f: (Option[A], Option[B]) => C) : Stream[C] = {
+
+    def _zipWithAll(pair : (Stream[A], Stream[B]) ) : Option[(C, (Stream[A], Stream[B]))] = pair match {
+      case (xs, ys) => xs match {
+        case Cons(xh, xt) => ys match {
+          case Cons(yh, yt) => Some((f(Some(xh()), Some(yh())), (xt(), yt())))
+          case _ => Some((f(Some(xh()), Option.empty[B]), (xt(), empty[B])))
+        }
+        case _ => ys match {
+          case Cons(yh, yt) => Some((f(Option.empty[A], Some(yh())), (empty[A], yt())))
+          case _ => None
+        }
+      }
+    }
+
+    unfold[C, (Stream[A], Stream[B])]((this, bs))(_zipWithAll)
+  }
+
+  def tails() : Stream[Stream[A]] = {
+    def _tails(as: Stream[A]) : Option[(Stream[A], Stream[A])] = as match {
+      case Cons(h, t) => Some((t(), t()))
+      case _ => None
+    }
+
+    unfold[Stream[A], Stream[A]](this)(_tails)
+  }
+
   def zipAll[B](bs: Stream[B]) : Stream[(Option[A], Option[B])] = {
+    def f(ao : Option[A], bo : Option[B]) : (Option[A], Option[B]) = ao match {
+      case Some(a) => bo match {
+        case Some(b) => (Some(a), Some(b))
+        case _ => (Some(a), Option.empty[B])
+      }
+      case _ => bo match {
+        case Some(b) => (Option.empty[A], Some(b))
+        case _ => (Option.empty[A], Option.empty[B])
+      }
+    }
+
+    zipWithAll[B, (Option[A], Option[B])](bs)(f)
+  }
+
+  // this is wrong because it quits as soon as it runs out of elements from either stream
+  def incorrectzipAll[B](bs: Stream[B]) : Stream[(Option[A], Option[B])] = {
 
     def f(a : A, b  : B) : (Option[A], Option[B]) = (Some(a), Some(b))
 
-    zipWithViaUnfold[B, (Option[A], Option[B])](bs)(f)
+    zipWith[B, (Option[A], Option[B])](bs)(f)
   }
 
-  def zipWithViaUnfold[B, C](bs : Stream[B])(f:(A, B) => C) : Stream[C] =  {
+  def zipWith[B, C](bs : Stream[B])(f:(A, B) => C) : Stream[C] =  {
 
     // S == Stream[A[, Stream[B]
-    def _zipWithViaUnfold(pair : (Stream[A], Stream[B]) ) : Option[(C, (Stream[A], Stream[B]))] = pair match {
+    def _zipWith(pair : (Stream[A], Stream[B]) ) : Option[(C, (Stream[A], Stream[B]))] = pair match {
       case (xs, ys) => xs match {
         case Cons(xh, xt) => ys match {
           case Cons(yh, yt) => Some((f(xh(), yh()), (xt(), yt())))
@@ -54,7 +97,7 @@ trait Stream[+A] {
       case _ => None
     }
 
-    unfold[C, (Stream[A], Stream[B])]((this, bs))(_zipWithViaUnfold)
+    unfold[C, (Stream[A], Stream[B])]((this, bs))(_zipWith)
   }
 
   def takeViaUnfold(n: Int) : Stream[A] = {
@@ -94,13 +137,6 @@ trait Stream[+A] {
     }
     go(this, List()).reverse
   }
-
-//    foldRight[List[A]](Nil:List[A])((h, t) => h :: t)
-// or
-//    this match {
-//      case Empty => Nil
-//      case Cons(h, t) => h() :: t().toList()
-//    }
 
   @annotation.tailrec
   final def find(f: A => Boolean): Option[A] = this match {
@@ -157,10 +193,16 @@ trait Stream[+A] {
     case _ => None
   }
 
+  def tailOption() : Option[Stream[A]] = this match {
+    case Cons(h, t) => Some(t())
+    case _ => None
+  }
+
   def headOptionViaFoldRight(): Option[A] = {
     def simple(a: A, b: => Option[A]):Option[A] = Some(a)
     foldRight(None:Option[A])(simple)
   }
+
 
 }
 case object Empty extends Stream[Nothing]
