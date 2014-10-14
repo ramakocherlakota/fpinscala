@@ -10,13 +10,10 @@ trait Stream[+A] {
     }
 
   def scanRight[B](z: => B)(f: (A, => B) => B): Stream[B] = {
+    def _scanRight(s : Stream[A]) : B = 
+      s.foldRight(z)(f)
 
-    def _scanRight(as: Stream[A], acc : Stream[B]) : Stream[B] = as match {
-      case Cons(h, t) => _scanRight(t(), foldRight(z)(f), acc)
-      case _ => acc
-    }
-
-    _scanRight(this, empty[B])
+    tails.map[B](_scanRight)
   }
 
   def map[B](f: A => B) : Stream[B] = 
