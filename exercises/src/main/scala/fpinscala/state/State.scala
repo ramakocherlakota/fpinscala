@@ -155,5 +155,16 @@ object State {
   def unit[S, A](a : A) : State[S, A] = 
     new State(s => (a, s))
 
-  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = ???
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = {
+
+    def handleInput(input: Input) : State[Machine] {
+      new State[Machine, (Int, Int)]({machine => 
+        input match {
+          case Coin => if (machine.locked) 
+          case Turn => 
+        }
+      })
+    }
+  }
+
 }
