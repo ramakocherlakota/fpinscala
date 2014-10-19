@@ -154,17 +154,37 @@ object State {
 
   def unit[S, A](a : A) : State[S, A] = 
     new State(s => (a, s))
+}
+
+object Candy {
 
   def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = {
 
-    def handleInput(input: Input) : State[Machine] {
-      new State[Machine, (Int, Int)]({machine => 
+    def handleInput(input: Input, state : State[Machine, (Int, Int)]) : State[Machine, (Int, Int)] = {
+      new State[Machine, (Int, Int)](machine => {
         input match {
-          case Coin => if (machine.locked) 
-          case Turn => 
+          case Coin => {
+            if (machine.locked && machine.candies > 0)
+              ( (machine.candies, machine.coins + 1), new Machine(false, machine.candies, machine.coins + 1))
+            else
+              ((machine.candies, machine.coins), machine)
+          }
+          case Turn => {
+            if (!machine.locked && machine.candies > 0)
+              ((machine.candies - 1, machine.coins), new Machine(true, machine.candies - 1, machine.coins))
+            else 
+              ((machine.candies, machine.coins), machine)
+          }
+          case _ => ((machine.candies, machine.coins), machine)
         }
       })
     }
+
+    def emptyRun : State[Machine, (Int, Int)] = new State[Machine, (Int, Int)]({
+      machine => ((machine.candies, machine.coins), machine)
+    })
+
+    inputs.foldRight[State[Machine, (Int, Int)]](emptyRun)(handleInput)
   }
 
 }
