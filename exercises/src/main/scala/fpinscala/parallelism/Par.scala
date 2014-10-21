@@ -39,8 +39,10 @@ object Par {
   def sequence[A](ps : List[Par[A]]) : Par[List[A]] = 
     ps.foldRight[Par[List[A]]](unit(Nil))((x,y) => map2(x,y)(_ :: _))
 
-  def parFilter[A](as : List[A])(f:A => Boolean) : Par[List[A]] = fork {
-    val fbs : List[Par[A]] = as.filter(asyncF(f))
+  def parFilter[A](as : List[A])(f:A => Boolean) : Par[List[A]] = {
+    def orNone(a : A) : A = if (f(a)) a else None
+    def asyncOrNone(a : A) : Par[A] = asyncF[A, A](orNone)
+    val fbs : List[Par[A]] = as.map(asyncOrNone)
     sequence(fbs)
   }
 
