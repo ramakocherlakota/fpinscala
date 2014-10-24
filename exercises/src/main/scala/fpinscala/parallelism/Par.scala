@@ -78,17 +78,18 @@ object Par {
   def choiceviaWide[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
     choiceWide[A, Boolean](cond)((c : Boolean) => if (c) t else f)
 
-  def choiceMapViaWide[V, K](k : Par[K])(choiceMap : Map[K, Par[V]]) : Par[Option[V]] = {
-    // choiceMap.get(kk) is an Option[Par[V]]
-    // need to map it to a Par[Option[V]]
-    choiceWide[Option[V], K](k)((kk : K) => optionSequence(choiceMap.get(kk)))
+  def join[A](ppa : Par[Par[A]]): Par[A] = {
+    es2 => {
+      val paf : Future[Par[A]] = ((es : ExecutorService) => run(es)(ppa))
+      run(es2)(paf.get)
+    }
   }
 
-  def optionSequence[A](opa : Option[Par[A]]) : Par[Option[A]] = 
-    es => opa match {
-      case Some(pa) => pa(es)
-      case None => unit(Option[A].None)(es)
-    }
+  def flatMap[A, B](pa : Par[A]) (f : A => Par[B]) : Par[B] = 
+    join(map(pa)(f))
+
+  def joinViaFlatMap[A](ppa : Par[Par[A]]): Par[A] = 
+    flatMap[Par[A], A](ppa)(pa => pa)
 
   /* Gives us infix syntax for `Par`. */
   implicit def toParOps[A](p: Par[A]): ParOps[A] = new ParOps(p)
