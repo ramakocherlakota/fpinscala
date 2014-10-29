@@ -93,6 +93,16 @@ object Par {
   /* Gives us infix syntax for `Par`. */
   implicit def toParOps[A](p: Par[A]): ParOps[A] = new ParOps(p)
 
+  // A = (X, Y)
+  // Z = Par[B]
+  // Par[(X, Y)] = (Par[X], Par[Y]) ?
+  // unitX:X => Par(X)
+  // unitY:Y => Par(Y)
+  def map2_1[X,Y,Z](x: Par[X], y: Par[Y])(g: (X,Y) => Z): Par[Z] = {
+
+    flatMap[Par[(X, Y)], Z] 
+  }
+
   class ParOps[A](p: Par[A]) {
 
 
